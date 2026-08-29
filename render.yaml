@@ -1,0 +1,39 @@
+# Render Blueprint for the AI-Powered Quotation Generation System
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Having this file at the repo root is what unlocks:
+#   - Auto-Deploy (push to main -> redeploy automatically)
+#   - PR Previews (each pull request gets its own isolated environment)
+
+previews:
+  generation: automatic   # spin up a preview environment for every new PR
+  expireAfterDays: 7      # auto-delete stale PR previews after 7 days of inactivity
+
+databases:
+  - name: quotation-db
+    plan: starter
+    databaseName: quotations
+    user: quotation_admin
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: quotation-api
+    runtime: python
+    plan: starter
+    region: oregon          # change to a region closer to you if needed
+    branch: main
+    autoDeploy: true
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false          # set manually in Render dashboard (never commit secrets)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quotation-db
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+    previewPlan: starter      # plan used for spun-up PR preview instances
