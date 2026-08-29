@@ -26,12 +26,13 @@ client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 # unit price. Keep the "NP" prefix convention and GCC part numbers as needed.
 # ---------------------------------------------------------------------------
 PRODUCT_CATALOG = [
-    {"name": "NP HP LaserJet Pro M404dn", "part_number": "W1A53A#B19", "unit_price": 850.00},
-    {"name": "NP HP LaserJet Pro M428fdw", "part_number": "W1A30A#B19", "unit_price": 1450.00},
-    {"name": "NP Canon imageCLASS MF3010", "part_number": "5252B004AA", "unit_price": 420.00},
-    {"name": "NP Epson EcoTank L3250", "part_number": "C11CJ67501", "unit_price": 380.00},
-    {"name": "NP Ricoh Aficio MP 2014", "part_number": "MP2014-GCC", "unit_price": 1200.00},
-    {"name": "NP Konica Minolta Bizhub 227", "part_number": "KM227-GCC", "unit_price": 2100.00},
+    {"name": "NP HP Color Laser MFP 178nw", "part_number": "4ZB96A#B19", "unit_price": None},
+    {"name": "NP HP Color Laser 150nw", "part_number": "4ZB95A#B19", "unit_price": None},
+    {"name": "NP HP Color Laser MFP 179fnw", "part_number": "4ZB97A#B19", "unit_price": None},
+    {"name": "NP HP Color LaserJet Pro MFP M182n", "part_number": "7KW54A#B19", "unit_price": None},
+    {"name": "NP HP Color LaserJet Pro MFP M183fw", "part_number": "7KW56A#B19", "unit_price": None},
+    {"name": "NP HP Color LaserJet Pro M255dw", "part_number": "7KW64A#B19", "unit_price": None},
+    {"name": "NP HP Color LaserJet Pro M454dw", "part_number": "W1Y45A#B19", "unit_price": None},
 ]
 
 TAX_RATE = 0.05  # adjust to your local VAT rate
@@ -78,6 +79,7 @@ class QuotationResponse(BaseModel):
     customer_name: str | None
     line_items: list[QuotationLineItem]
     unmatched_requests: list[str] = []
+    missing_price_items: list[str] = []
     subtotal: float
     tax: float
     grand_total: float
@@ -143,6 +145,7 @@ def generate_quotation(req: QuotationRequest):
     catalog_by_name = {p["name"]: p for p in PRODUCT_CATALOG}
     line_items: list[QuotationLineItem] = []
     unmatched: list[str] = []
+    missing_price: list[str] = []
 
     for match in matches:
         matched_name = match.get("matched_name")
@@ -151,6 +154,11 @@ def generate_quotation(req: QuotationRequest):
         if matched_name and matched_name in catalog_by_name:
             product = catalog_by_name[matched_name]
             unit_price = product["unit_price"]
+
+            if unit_price is None:
+                missing_price.append(product["name"])
+                continue
+
             line_items.append(
                 QuotationLineItem(
                     product_name=product["name"],
@@ -171,6 +179,7 @@ def generate_quotation(req: QuotationRequest):
         customer_name=req.customer_name,
         line_items=line_items,
         unmatched_requests=unmatched,
+        missing_price_items=missing_price,
         subtotal=subtotal,
         tax=tax,
         grand_total=grand_total,
