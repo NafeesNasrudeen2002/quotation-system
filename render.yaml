@@ -11,7 +11,7 @@ previews:
 
 databases:
   - name: quotation-db
-    plan: starter
+    plan: free
     databaseName: quotations
     user: quotation_admin
     postgresMajorVersion: "16"
@@ -20,7 +20,7 @@ services:
   - type: web
     name: quotation-api
     runtime: python
-    plan: starter
+    plan: free
     region: oregon          # change to a region closer to you if needed
     branch: main
     autoDeploy: true
@@ -38,4 +38,3 @@ services:
           property: connectionString
       - key: ENVIRONMENT
         value: production
-    previewPlan: starter      # plan used for spun-up PR preview instances
