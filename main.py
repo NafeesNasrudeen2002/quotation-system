@@ -11,9 +11,28 @@ something real to build and deploy. Expand /generate-quotation to:
 
 import os
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 app = FastAPI(title="Quotation API")
+
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    """Basic landing page so the root URL isn't blank."""
+    return """
+    <html>
+        <head><title>Quotation API</title></head>
+        <body style="font-family: sans-serif; max-width: 600px; margin: 60px auto;">
+            <h1>Quotation API is running ✅</h1>
+            <p>This is the backend for the AI-powered quotation generator.</p>
+            <ul>
+                <li><a href="/health">/health</a> — service health check</li>
+                <li><a href="/docs">/docs</a> — interactive API docs (try /generate-quotation here)</li>
+            </ul>
+        </body>
+    </html>
+    """
 
 
 @app.get("/health")
